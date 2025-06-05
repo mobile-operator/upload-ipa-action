@@ -1,0 +1,53 @@
+name: "Upload IPA"
+description: "Gets an upload URL and pushes your .ipa"
+inputs:
+  api_key:
+    description: "Your API key"
+    required: true
+  ipa_path:
+    description: "Path to the .ipa file"
+    required: true
+  git_branch:
+    description: "Git branch name (e.g. main)"
+    required: true
+  git_commit:
+    description: "Commit SHA or PR head SHA"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        #!/bin/bash
+        API_KEY="${{ inputs.api_key }}"
+        IPA_PATH="${{ inputs.ipa_path }}"
+        GIT_BRANCH="${{ inputs.git_branch }}"
+        GIT_COMMIT="${{ inputs.git_commit }}"
+        # 1. Get upload URL
+        RESPONSE=$(curl -s -X POST \
+          -H "x-api-key: $API_KEY" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "git_branch": "'"$GIT_BRANCH"'",
+            "git_commit": "'"$GIT_COMMIT"'",
+            "pullRequestHeadSha": "'"$GIT_COMMIT"'"
+          }' \
+          https://getuploadurl-3pohuz4bja-uc.a.run.app)
+        UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.uploadUrl')
+        BUILD_ID=$(echo "$RESPONSE" | jq -r '.buildId')
+        if [ -z "$UPLOAD_URL" ] || [ "$UPLOAD_URL" = "null" ]; then
+          echo "Error getting upload URL:"; echo "$RESPONSE"; exit 1
+        fi
+        echo "Got upload URL for build $BUILD_ID: $UPLOAD_URL"
+        # 2. Upload the entire IPA
+        echo "Uploading IPA..."
+        curl -X PUT \
+          -H "Content-Type: application/octet-stream" \
+          --data-binary @"$IPA_PATH" \
+          "$UPLOAD_URL" \
+          -w "\nHTTP status: %{http_code}\n"
+        if [ $? -ne 0 ]; then
+          echo "Upload failed"; exit 1
+        fi
+        echo "Upload done!"
+      shell: bash
+
