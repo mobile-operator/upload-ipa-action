@@ -13,7 +13,7 @@ inputs:
   git_commit:
     description: "Commit SHA or PR head SHA"
     required: true
-  headSha:
+  head_sha:
     description: "Pull request head SHA"
     required: true
 runs:
@@ -25,7 +25,7 @@ runs:
         IPA_PATH="${{ inputs.ipa_path }}"
         GIT_BRANCH="${{ inputs.git_branch }}"
         GIT_COMMIT="${{ inputs.git_commit }}"
-        HEAD_SHA="${{ inputs.headSha }}"
+        HEAD_SHA="${{ inputs.head_sha }}"
         # 1. Get upload URL
         RESPONSE=$(curl -s -X POST \
           -H "x-api-key: $API_KEY" \
