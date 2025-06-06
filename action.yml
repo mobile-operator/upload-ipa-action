@@ -1,4 +1,4 @@
-name: "Upload IPA"
+name: "Upload IPA to Mobile Operator"
 description: "Gets an upload URL and pushes your .ipa to Mobile Operator"
 inputs:
   api_key:
