@@ -1,5 +1,5 @@
 name: "Upload IPA"
-description: "Gets an upload URL and pushes your .ipa"
+description: "Gets an upload URL and pushes your .ipa to Mobile Operator"
 inputs:
   api_key:
     description: "Your API key"
@@ -13,6 +13,9 @@ inputs:
   git_commit:
     description: "Commit SHA or PR head SHA"
     required: true
+  headSha:
+    description: "Pull request head SHA"
+    required: true
 runs:
   using: "composite"
   steps:
@@ -22,6 +25,7 @@ runs:
         IPA_PATH="${{ inputs.ipa_path }}"
         GIT_BRANCH="${{ inputs.git_branch }}"
         GIT_COMMIT="${{ inputs.git_commit }}"
+        HEAD_SHA="${{ inputs.headSha }}"
         # 1. Get upload URL
         RESPONSE=$(curl -s -X POST \
           -H "x-api-key: $API_KEY" \
@@ -29,7 +33,7 @@ runs:
           -d '{
             "git_branch": "'"$GIT_BRANCH"'",
             "git_commit": "'"$GIT_COMMIT"'",
-            "pullRequestHeadSha": "'"$GIT_COMMIT"'"
+            "head_sha": "'"$HEAD_SHA"'"
           }' \
           https://getuploadurl-3pohuz4bja-uc.a.run.app)
         UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.uploadUrl')
@@ -50,4 +54,3 @@ runs:
         fi
         echo "Upload done!"
       shell: bash
-
